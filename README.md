@@ -1,56 +1,73 @@
-<p align="center">
-<img src="https://i.imgur.com/pU5A58S.png" alt="Microsoft Active Directory Logo"/>
-</p>
+# Active Directory Setup in Azure
 
-<h1>On-premises Active Directory Deployed in the Cloud (Azure)</h1>
-This tutorial outlines the implementation of on-premises Active Directory within Azure Virtual Machines.<br />
+## Overview
+This repository provides a structured approach to setting up an on-premises Active Directory environment within Microsoft Azure Virtual Machines.
 
-
-<h2>Video Demonstration</h2>
-
-- ### [YouTube: How to Deploy on-premises Active Directory within Azure Compute](https://www.youtube.com)
-
-<h2>Environments and Technologies Used</h2>
-
-- Microsoft Azure (Virtual Machines/Compute)
-- Remote Desktop
+## Prerequisites
+Ensure the following are available before installation:
+- Azure Virtual Machines (Windows Server 2022, Windows 10)
+- Remote Desktop Access
 - Active Directory Domain Services
-- PowerShell
+- PowerShell for automation
 
-<h2>Operating Systems Used </h2>
+## Installation Steps
 
-- Windows Server 2022
-- Windows 10 (21H2)
+### Part 1: Setting Up the Domain Controller
+1. **Set up an Azure VM for DC:**
+   - Create a Resource Group
+   - Create a Virtual Network and Subnet
+   - Deploy a Windows Server 2022 VM named `DC-1`
+   - **Username:** labuser
+   - **Password:** SamplePassword123!
+   - Set the Private IP address of `DC-1` to static
+   - Disable Windows Firewall for connectivity testing
 
-<h2>High-Level Deployment and Configuration Steps</h2>
+2. **Create the Client VM:**
+   - Deploy a Windows 10 VM named `Client-1`
+   - **Username:** labuser
+   - **Password:** SamplePassword123!
+   - Attach it to the same Virtual Network as `DC-1`
+   - Set `Client-1` DNS settings to `DC-1`'s Private IP
+   - Restart `Client-1` from the Azure Portal
+   - Log in to `Client-1` and verify connectivity to `DC-1`
 
-- Step 1
-- Step 2
-- Step 3
-- Step 4
+3. **Install Active Directory on DC-1:**
+   - Log into `DC-1`
+   - Install Active Directory Domain Services (AD DS)
+   - Promote `DC-1` to a domain controller for `mydomain.com`
+   - Restart and log in as `mydomain.com\labuser`
 
-<h2>Deployment and Configuration Steps</h2>
+### Part 2: Configuring Active Directory
+1. **Create Organizational Units (OUs):**
+   - In **Active Directory Users and Computers (ADUC)**:
+     - Create an OU named `_EMPLOYEES`
+     - Create an OU named `_ADMINS`
+     - Create an OU named `_CLIENTS`
 
-<p>
-<img src="https://i.imgur.com/DJmEXEB.png" height="80%" width="80%" alt="Disk Sanitization Steps"/>
-</p>
-<p>
-Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur.
-</p>
-<br />
+2. **Create Admin and User Accounts:**
+   - In ADUC, create a new user:
+     - **Name:** Jane Doe
+     - **Username:** jane_admin
+     - **Password:** SamplePassword123!
+     - Add `jane_admin` to the `Domain Admins` Security Group
+   - Log out and back in as `mydomain.com\jane_admin`
 
-<p>
-<img src="https://i.imgur.com/DJmEXEB.png" height="80%" width="80%" alt="Disk Sanitization Steps"/>
-</p>
-<p>
-Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur.
-</p>
-<br />
+3. **Join Client-1 to the Domain:**
+   - Log in as `labuser`
+   - Join `Client-1` to `mydomain.com`
+   - Restart `Client-1`
+   - Verify `Client-1` appears in ADUC under `_CLIENTS`
 
-<p>
-<img src="https://i.imgur.com/DJmEXEB.png" height="80%" width="80%" alt="Disk Sanitization Steps"/>
-</p>
-<p>
-Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur.
-</p>
-<br />
+### Part 3: Configuring Remote Desktop & User Management
+1. **Enable Remote Desktop for Domain Users:**
+   - Log into `Client-1` as `jane_admin`
+   - Open System Properties → Remote Desktop
+   - Allow **Domain Users** access to Remote Desktop
+   - (In real-world settings, use Group Policy to configure multiple machines)
+
+2. **Create Additional Users via PowerShell:**
+   - Log in to `DC-1` as `jane_admin`
+   - Open PowerShell ISE as Administrator
+   - Run a script to generate multiple users in `_EMPLOYEES`
+   - Verify user creation in ADUC
+   - Log into `Client-1` as one of the new users
